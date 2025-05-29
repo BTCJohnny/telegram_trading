@@ -1,0 +1,25 @@
+import os
+
+# --- Hyperliquid API Keys ---
+# It is highly recommended to store these as environment variables
+# For example, in your shell:
+# export HYPERLIQUID_SECRET_KEY="0x..."
+HYPERLIQUID_SECRET_KEY = os.environ.get("HYPERLIQUID_SECRET_KEY")
+# If you prefer to hardcode (NOT recommended for production):
+# HYPERLIQUID_SECRET_KEY = "0x..."
+
+# --- Telegram Bot Configuration ---
+# Store these as environment variables for security
+# export TELEGRAM_BOT_TOKEN="YOUR_BOT_TOKEN_HERE"
+# export TELEGRAM_CHANNEL_ID="-1234567890" # This is often a negative number for channels
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHANNEL_ID = int(os.environ.get("TELEGRAM_CHANNEL_ID", 0)) # Ensure it's an int, default to 0 if not set
+
+# --- Trading Strategy Parameters ---
+# This is a crucial parameter for your Telegram bot.
+# It defines the USD value of a '1/5' size trade unit.
+# For example, if FUNDING_PER_1_5_UNIT = 100, then:
+# 'Size: 1/5' will result in roughly $100 exposure.
+# 'Size: 3/5' will result in roughly $300 exposure.
+# Adjust this based on your capital and risk tolerance.
+FUNDING_PER_1_5_UNIT = 100 # USD amount
