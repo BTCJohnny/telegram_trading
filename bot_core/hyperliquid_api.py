@@ -6,7 +6,7 @@ import requests
 import os
 import logging
 
-from eth_account.signers import LocalAccount
+from eth_account import Account
 from hyperliquid.info import Info
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
@@ -14,9 +14,12 @@ from hyperliquid.utils import constants
 # Load sensitive configurations (API keys, etc.)
 # Make sure your do_not_share.py is in the same directory or accessible via PYTHONPATH
 try:
-    import do_not_share as config
+    from dotenv import load_dotenv
+    load_dotenv()
+    HYPERLIQUID_SECRET_KEY = os.getenv("HYPERLIQUID_SECRET_KEY")
+
 except ImportError:
-    logging.error("do_not_share.py not found. Please create it with your API keys.")
+    logging.error(".env not found. Please create it with your API keys.")
     exit()
 
 # Setup logging
@@ -27,9 +30,9 @@ logger = logging.getLogger(__name__)
 # Initialize the Hyperliquid account using the secret key from do_not_share.
 # This object will be passed to functions that interact with the exchange.
 account = None
-if config.HYPERLIQUID_SECRET_KEY:
+if HYPERLIQUID_SECRET_KEY:
     try:
-        account = LocalAccount.from_private_key(config.HYPERLIQUID_SECRET_KEY)
+        account = Account.from_key(HYPERLIQUID_SECRET_KEY)
         logger.info(f"Hyperliquid account initialized for address: {account.address}")
     except Exception as e:
         logger.error(f"Failed to initialize Hyperliquid account: {e}")
@@ -136,7 +139,7 @@ def get_sz_px_decimals(coin: str) -> tuple[int, int]:
 # ─────────────────────────────────────────────────────────────────────────────
 #  3. PLACING A LIMIT ORDER
 # ─────────────────────────────────────────────────────────────────────────────
-def limit_order(coin: str, is_buy: bool, sz: float, limit_px: float, reduce_only: bool, account: LocalAccount):
+def limit_order(coin: str, is_buy: bool, sz: float, limit_px: float, reduce_only: bool, account: Account):
     """
     Places a limit order (buy or sell) on Hyperliquid via the provided account.
 
@@ -179,7 +182,7 @@ def limit_order(coin: str, is_buy: bool, sz: float, limit_px: float, reduce_only
 # ─────────────────────────────────────────────────────────────────────────────
 #  4. CHECK ACCOUNT BALANCE
 # ─────────────────────────────────────────────────────────────────────────────
-def acct_bal(account: LocalAccount) -> float:
+def acct_bal(account: Account) -> float:
     """
     Retrieves and prints the current account value (e.g., margin/collateral)
     from the Hyperliquid User State endpoint.
@@ -200,7 +203,7 @@ def acct_bal(account: LocalAccount) -> float:
 # ─────────────────────────────────────────────────────────────────────────────
 #  5. GET POSITION DETAILS
 # ─────────────────────────────────────────────────────────────────────────────
-def get_position(coin: str, account: LocalAccount) -> tuple:
+def get_position(coin: str, account: Account) -> tuple:
     """
     Retrieves position info for a specific coin from the user's account.
     Determines if a position is open, whether it's long or short, and
@@ -261,7 +264,7 @@ def get_position(coin: str, account: LocalAccount) -> tuple:
 # ─────────────────────────────────────────────────────────────────────────────
 #  6. CANCEL ALL ORDERS
 # ─────────────────────────────────────────────────────────────────────────────
-def cancel_all_orders(account: LocalAccount):
+def cancel_all_orders(account: Account):
     """
     Fetches all open orders for the account and cancels them.
     Useful before adjusting positions, to avoid leftover orders.
@@ -291,7 +294,7 @@ def cancel_all_orders(account: LocalAccount):
 # ─────────────────────────────────────────────────────────────────────────────
 #  7. KILL SWITCH (IMMEDIATE POSITION EXIT)
 # ─────────────────────────────────────────────────────────────────────────────
-def kill_switch(coin: str, account: LocalAccount):
+def kill_switch(coin: str, account: Account):
     """
     Closes any open position on the specified coin by canceling
     all open orders first, then placing a marketable order in
@@ -347,7 +350,7 @@ def kill_switch(coin: str, account: LocalAccount):
 # ─────────────────────────────────────────────────────────────────────────────
 #  8. PNL-BASED POSITION CLOSING
 # ─────────────────────────────────────────────────────────────────────────────
-def pnl_close(coin: str, target_pnl: float, max_loss_pnl: float, account: LocalAccount):
+def pnl_close(coin: str, target_pnl: float, max_loss_pnl: float, account: Account):
     """
     Monitors the open position's PnL percentage (pnl_perc).
     - If pnl_perc > target_pnl, closes the position (take profit).

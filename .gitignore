@@ -3,3 +3,7 @@ config.py
 *.db
 __pycache__/
 .env
+.txt
+*/backup_code/*
+backup_code/
+tests/

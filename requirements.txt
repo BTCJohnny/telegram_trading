@@ -3,9 +3,9 @@ eth-account
 hyperliquid-python-sdk
 requests
 python-telegram-bot
-ccxt  # For exchange integrations (used in old bot)
-pandas  # For data manipulation (used in old bot)
-schedule  # For periodic tasks (used in old bot)
-# schedule # Uncomment if you explicitly use the schedule library for periodic tasks (e.g., PnL monitoring)
-
-
+python-dotenv
+ccxt
+pandas
+schedule
+telethon
+python-dotenv

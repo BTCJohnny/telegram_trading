@@ -1,0 +1,103 @@
+PROJECT: Hyperliquid Telegram Signal Trading Bot
+
+DESCRIPTION:
+This project is a Python-based trading bot designed to automate trade execution on the Hyperliquid decentralized exchange. It operates by reading trade signals from a designated Telegram channel, interpreting these signals (bullish/bearish entries, exit signals), dynamically sizing trades based on confidence levels, and managing positions (PnL, trailing stops). The bot aims for robustness through persistent storage of trade data and continuous monitoring of open positions.
+
+CURRENT ARCHITECTURE:
+The project is structured as a Python package, promoting modularity and clear separation of concerns.
+
+your_bot_project/
+├── .env                        # Centralized configuration (sensitive data, trading parameters)
+├── main.py                     # The single entry point to run the bot
+├── requirements.txt            # Python dependencies
+├── README.md                   # Project documentation
+├── .gitignore                  # Specifies files to ignore from version control (e.g., config.py)
+
+└── bot_core/                   # Main Python package for bot logic
+    ├── __init__.py             # Makes 'bot_core' a Python package
+    ├── hyperliquid_api.py      # Low-level interaction with Hyperliquid API (fetching market data, placing orders, managing positions)
+    ├── strategy_manager.py     # Implements enhanced trading logic (dynamic sizing, slippage control, bullish/bearish entry, Telegram-triggered exits)
+    ├── trade_persistence.py    # Manages SQLite database for monitoring trades, runs continuous PnL/stop-loss monitoring thread
+    ├── telegram_interface.py   # Handles Telegram API interaction (listening to messages, parsing signals using regex)
+    └── utils.py                # Placeholder for common utility functions (currently mostly logging setup)
+
+KEY COMPONENTS & RESPONSIBILITIES:
+
+1.  .env:
+    -   Purpose: Stores all sensitive API keys (Hyperliquid, Telegram) and adjustable trading parameters (e.g., FUNDING_PER_1_5_UNIT, default PnL targets).
+    -   Security: Values are primarily sourced from environment variables for enhanced security.
+    -   Location: Top-level directory.
+
+2.  main.py:
+    -   Purpose: The main entry point script. It orchestrates the initialization and startup of the bot's various services (Telegram listener, trade monitor).
+    -   Location: Top-level directory.
+
+3.  bot_core/hyperliquid_api.py (formerly hyperliquid_bot.py):
+    -   Purpose: Encapsulates all direct interactions with the Hyperliquid exchange API.
+    -   Functions: ask_bid, get_sz_px_decimals, limit_order, acct_bal, get_position, cancel_all_orders, kill_switch.
+    -   Dependencies: eth-account, hyperliquid-sdk, requests.
+    -   Key Feature: Initializes the Hyperliquid `LocalAccount` object.
+
+4.  bot_core/strategy_manager.py (formerly additional_functions.py):
+    -   Purpose: Implements the higher-level trading logic derived from signal interpretation.
+    -   Functions: calculate_dynamic_sz, place_slippage_controlled_order, handle_bullish_entry_signal, handle_bearish_entry_signal, handle_telegram_exit_signal, calculate_trailing_stop_price.
+    -   Dependencies: Imports functions from `hyperliquid_api.py` and configuration from `config.py`.
+
+5.  bot_core/trade_persistence.py (formerly monitoring_trading.py):
+    -   Purpose: Manages the SQLite database for persistent storage of bot-managed trades and runs a separate thread for continuous position monitoring (PnL, trailing stops).
+    -   Functions: TradeMonitorDB class (add_trade, get_open_trades, update_trade_status), TradeMonitor class (start_monitoring, _monitor_loop).
+    -   Dependencies: sqlite3, threading, imports from `hyperliquid_api.py` and `strategy_manager.py`.
+
+6.  bot_core/telegram_interface.py (formerly telegram_listener.py):
+    -   Purpose: The interface with Telegram. It listens for incoming messages, parses them using regex patterns, and dispatches the extracted signals to the `strategy_manager.py` functions.
+    -   Main Function: `handle_telegram_message`.
+    -   Dependencies: python-telegram-bot, imports from `config.py`, `strategy_manager.py`, and `trade_persistence.py`.
+    -   Note: This file contains the regex patterns for signal detection (bullish entry, bearish entry, exit).
+
+7.  bot_core/utils.py:
+    -   Purpose: Currently empty. Intended for common utility functions (e.g., custom logging setup, data formatting helpers) that can be shared across modules.
+
+CONFIGURATION DETAILS (in .env):
+-   HYPERLIQUID_SECRET_KEY: Your Hyperliquid private key (0x...). Crucial.
+-   TELEGRAM_BOT_TOKEN: The API token for your Telegram Bot (e.g., 123456:ABC...).
+-   TELEGRAM_CHANNEL_ID: The numerical ID of your Telegram channel (typically a negative integer, e.g., -1001234567890).
+-   FUNDING_PER_1_5_UNIT: A float representing the USD value allocated for a trade with "Size: 1/5". This value scales with the numerator (e.g., 3/5 = 3 * FUNDING_PER_1_5_UNIT USD).
+-   MAX_ENTRY_SLIPPAGE_PERCENT: Maximum allowed percentage deviation from signal price for order execution.
+-   DEFAULT_TRAILING_STOP_PERCENT: Default percentage for trailing stop calculations.
+-   DEFAULT_PROFIT_TAKE_PERCENT: Default profit target percentage for trades.
+-   DEFAULT_MAX_LOSS_PERCENT: Default maximum loss percentage for trades.
+
+CURRENT TASK FOR CODING AGENT:
+The primary goal is to finalize the project's configuration and ensure code integrity after the architectural refactor.
+
+Immediate Focus Areas:
+1.  Verify All Imports: Ensure all `import` statements across `main.py` and all modules within `bot_core/` correctly reflect the new directory structure and package references (e.g., `from bot_core.hyperliquid_api import ...`).
+2.  Configuration Accessibility: Confirm that values from `config.py` are correctly accessed by all modules that need them. This often involves `import config` in sibling modules (`main.py`) or careful relative imports within `bot_core/`.
+3.  Hyperliquid Account Initialization: Ensure the `account` object (from `hyperliquid_api.py`) is properly initialized *once* and correctly imported/passed to all functions needing it (e.g., `strategy_manager.py`, `trade_persistence.py`, `telegram_interface.py`).
+4.  Remove Redundancy: Remove any leftover global variables or redundant code that might have existed from the previous, flat structure.
+5.  Basic Logging Setup: Ensure that basic logging is configured consistently across all modules for effective debugging.
+
+PRIORITIES & GUIDING PRINCIPLES:
+1.  SECURITY FIRST:
+    -   Never hardcode sensitive keys. Ensure all API keys are sourced from environment variables via `config.py`.
+    -   Make sure `config.py` is explicitly listed in `.gitignore` to prevent accidental commits.
+2.  ROBUSTNESS:
+    -   Prioritize error handling for network requests, API responses, and malformed input.
+    -   Implement retries where appropriate (e.g., for API calls).
+3.  OBSERVABILITY:
+    -   Ensure logging is comprehensive and informative, covering successful operations, warnings, and errors across all modules.
+4.  MODULARITY:
+    -   Maintain the clear separation of concerns established by the new directory structure. Avoid cross-dependencies that break modularity.
+5.  PREPARE FOR TESTING:
+    -   The ultimate goal of this phase is to have a completely runnable bot ready for initial testing.
+
+TESTING CONTEXT:
+Once configuration is complete, the bot will be tested by executing `python main.py`.
+Test steps include:
+-   Observing startup logs for any errors.
+-   Sending various test Telegram messages (bullish entry, bearish entry, exit signals) to the configured channel.
+-   Monitoring Hyperliquid for placed orders and opened/closed positions.
+-   Verifying that trade data is correctly persisted in `bot_trades.db` (usually located in the project root by `trade_persistence.py`).
+-   Observing continuous PnL monitoring, take-profit, and stop-loss/trailing-stop triggers.
+All initial testing will be performed on the **HYPERLIQUID TESTNET**, NOT Mainnet. The agent should ensure the `constants.MAINNET_API_URL` within `hyperliquid_api.py` is temporarily set to `constants.TESTNET_API_URL` for testing purposes.
+
