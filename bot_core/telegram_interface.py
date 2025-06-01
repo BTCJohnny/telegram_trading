@@ -1,4 +1,4 @@
-# bot_core/telegram_interface.py - Enhanced Telegram Message Processing
+# bot_core/telegram_interface.py - Fixed Parameter Mismatches
 
 import re
 import logging
@@ -156,9 +156,10 @@ class TelegramMessageProcessor:
                 
                 # Check if we should execute this trade
                 if self._should_execute_trade(symbol, True):
+                    # ✅ FIXED: Removed 'account' parameter
                     trade_result = handle_bullish_entry_signal(
                         symbol, entry_price, size_numerator, size_denominator,
-                        account, self.db_manager.add_trade
+                        self.db_manager.add_trade
                     )
                     
                     if trade_result.get('status') == 'success':
@@ -210,9 +211,10 @@ class TelegramMessageProcessor:
                 
                 # Check if we should execute this trade
                 if self._should_execute_trade(symbol, False):
+                    # ✅ FIXED: Removed 'account' parameter
                     trade_result = handle_bearish_entry_signal(
                         symbol, entry_price, size_numerator, size_denominator,
-                        account, self.db_manager.add_trade
+                        self.db_manager.add_trade
                     )
                     
                     if trade_result.get('status') == 'success':
@@ -286,8 +288,9 @@ class TelegramMessageProcessor:
                 
                 # Attempt to close our position if we have one
                 position_type_str = "long" if direction == 'bullish' else "short"
+                # ✅ FIXED: Removed 'account' parameter
                 exit_result = handle_telegram_exit_signal(
-                    symbol, position_type_str, account,
+                    symbol, position_type_str,
                     self.db_manager.find_and_update_trade_by_coin_and_type
                 )
                 
@@ -467,7 +470,6 @@ def process_test_message(message_text: str):
     db_manager = TradeMonitorDB(DB_NAME)
     processor = TelegramMessageProcessor(db_manager)
     return processor.process_message(message_text)
-
 
 # Module constants
 DB_NAME = "bot_trades.db"
