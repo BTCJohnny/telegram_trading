@@ -16,26 +16,17 @@ from hyperliquid.utils import constants
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-    HYPERLIQUID_SECRET_KEY = os.getenv("HYPERLIQUID_SECRET_KEY")
-except ImportError:
-    logging.error(".env not found. Please create it with your API keys.")
-    exit()
-
 # --- Hyperliquid Account Initialization ---
 account = None
-if HYPERLIQUID_SECRET_KEY:
+if config.HYPERLIQUID_SECRET_KEY:
     try:
-        account = Account.from_key(HYPERLIQUID_SECRET_KEY)
+        account = Account.from_key(config.HYPERLIQUID_SECRET_KEY)
         logger.info(f"Hyperliquid account initialized for address: {account.address}")
     except Exception as e:
         logger.error(f"Failed to initialize Hyperliquid account: {e}")
         exit()
 else:
-    logger.error("HYPERLIQUID_SECRET_KEY not found. Exiting.")
+    logger.error("HYPERLIQUID_SECRET_KEY not found in config. Exiting.")
     exit()
 
 # Caching for szDecimals and pxDecimals as they are static for a coin

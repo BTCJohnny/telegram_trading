@@ -1,8 +1,37 @@
 # .gitignore
+# Ignore all database files
 *.db
+
+# Ignore Python cache directories
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore environment files
 .env
-.txt
-*/backup_code/*
+config.py
+
+# Ignore session files
+*.session
+
+# Ignore backup_code directory
 backup_code/
-tests/
+
+# Ignore tests directory (keep specific test files tracked)
+# tests/
+
+# Ignore all log files
+*.log
+
+# Ignore debug and standalone files
+debug_*.py
+*standalone*.py
+
+# Ignore macOS files
+.DS_Store
+.DS_Store?
+
+# Ignore temporary files
+*tmp*
+temp_*
